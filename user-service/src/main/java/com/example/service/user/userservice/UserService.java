@@ -1,6 +1,8 @@
 package com.example.service.user.userservice;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,10 +17,15 @@ public class UserService {
           new User(3, "Third", "User")
   );
 
+  @Autowired
+  private RestTemplate restTemplate;
+
   public User getUser(int userId) throws Exception {
-    Optional<User> user = users.stream().filter(u -> u.getId() == userId).findFirst();
-    if (user.isPresent()) {
-      return user.get();
+    Optional<User> userOptional = users.stream().filter(u -> u.getId() == userId).findFirst();
+    if (userOptional.isPresent()) {
+      List<Contact> contacts = restTemplate.getForObject("http://contact-service/contact/user/" + userId, List.class);
+      userOptional.get().setContacts(contacts);
+      return userOptional.get();
     } else {
       throw new Exception("User Not Found");
     }
